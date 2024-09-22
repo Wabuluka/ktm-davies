@@ -1,0 +1,48 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "pipeline": {
+    "codegen": {
+      "outputs": ["src/generated/gql/**"]
+    },
+    "codegen:w": {
+      "cache": false
+    },
+    "test": {},
+    "test:w": {
+      "cache": false
+    },
+    "test:i": {
+      "cache": false
+    },
+    "test:coverage": {
+      "cache": false
+    },
+    "build-storybook": {
+      "outputs": ["dist/**", "storybook-static/**"]
+    },
+    "storybook:ci": {},
+    "storybook": {},
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"],
+      "env": [
+        "APP_URL",
+        "BASIC_AUTH_USER",
+        "BASIC_AUTH_PASSWORD",
+        "GRAPHQL_ENDPOINT",
+        "GRAPHQL_BASIC_AUTH_BASE64",
+        "GRAPHQL_API_KEY"
+      ]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "lint:fix": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false
+    }
+  }
+}

@@ -1,0 +1,13 @@
+projects:
+  blackcherry:
+    schema: 'src/graphql/lighthouse-schema.graphql'
+    documents: 'sites/blackcherry/**/*.{graphql,ts,tsx}'
+  ceriserose:
+    schema: 'src/graphql/lighthouse-schema.graphql'
+    documents: 'sites/ceriserose/**/*.{graphql,ts,tsx}'
+  chocolatsucre:
+    schema: 'src/graphql/lighthouse-schema.graphql'
+    documents: 'sites/chocolatsucre/**/*.{graphql,ts,tsx}'
+  ktcom:
+    schema: 'src/graphql/lighthouse-schema.graphql'
+    documents: 'sites/ktcom/**/*.{graphql,ts,tsx}'

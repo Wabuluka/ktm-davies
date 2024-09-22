@@ -1,0 +1,47 @@
+{
+  "name": "ktcms",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "sites/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "codegen": "turbo run codegen",
+    "codegen:w": "turbo run codegen:w",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "prettier --ignore-path .gitignore --write \"sites/**/*.{ts,tsx,md}\" \"packages/**/*.{ts,tsx,md}\"",
+    "make:component": "hygen component make",
+    "make:page": "hygen page make",
+    "build-storybook": "turbo run build-storybook",
+    "storybook": "turbo run storybook",
+    "storybook:ci": "turbo run storybook:ci",
+    "test": "turbo run test",
+    "test:w": "turbo run test:w",
+    "test:i": "turbo run test:i",
+    "test:coverage": "turbo run test:coverage"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "eslint-config-custom": "*",
+    "http-server": "^14.1.1",
+    "husky": "^8.0.3",
+    "hygen": "^6.2.11",
+    "lint-staged": "^15.0.2",
+    "prettier": "^3.0.1",
+    "prettier-plugin-tailwindcss": "^0.5.4",
+    "turbo": "latest",
+    "wait-on": "^7.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "packageManager": "npm@8.19.2",
+  "lint-staged": {
+    "sites/**/*.{ts,tsx,md}": "prettier --write",
+    "packages/**/*.{ts,tsx,md}": "prettier --write"
+  }
+}

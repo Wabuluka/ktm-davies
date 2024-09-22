@@ -1,0 +1,34 @@
+.github
+.husky
+.vscode
+bin
+node_modules
+terraform
+
+# レーベルサイト
+
+sites/*/node_modules
+packages/*/node_modules
+
+# KTCMS
+
+src/node_modules
+src/public/hot
+src/public/build
+
+src/storage/app/*
+src/storage/app/!public
+src/storage/app/public/*
+src/storage/framework/cache/*
+src/storage/framework/sessions/*
+src/storage/framework/testing/*
+src/storage/framework/views/*
+src/storage/logs/*
+src/storage/media-library/temp/*
+
+src/_ide_helper*
+src/.env*
+src/.phpstorm*
+src/.phpunit*
+src/vendor
+src/tests

@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# shellcheck source=/dev/null
+. "$(dirname "$0")/source/common.sh"
+
+cd "$REPO_ROOT_DIR"
+
+usage() {
+    cat <<_EOT_
+$(basename "$0") [OPTIONS]
+
+Description:
+  Setup local environment
+
+Options:
+  --with-git-hooks ... Run Git hook setup together
+  -h | --help      ... Display help
+
+_EOT_
+}
+
+function setup_ktcms() {
+    declare -r DIR=$KTCMS_DIR
+
+    if [ -f "$DIR/.env" ]; then
+        echo 'Info: .env file already exists. skip creation'
+    else
+        cp "$DIR/.env.example" "$DIR/.env"
+    fi
+
+    if [ -d "$DIR/vendor" ]; then
+        echo 'Info: vendor directory already exists. skip setup of Laravel Sail'
+    else
+        # see: https://readouble.com/laravel/9.x/ja/sail.html#installing-composer-dependencies-for-existing-projects
+        docker run --rm \
+            -u "$(id -u):$(id -g)" \
+            -v "$DIR:/var/www/html" \
+            -w /var/www/html \
+            laravelsail/php81-composer:latest \
+            sh -c '
+        composer install --ignore-platform-reqs && \
+        php artisan key:generate'
+    fi
+
+    (
+        cd "$KTCMS_DIR"
+        ./vendor/bin/sail up -d
+
+        # DB コンテナの起動を 10 秒間待機
+        echo -n 'Waiting for database creation'
+        for _ in $(seq 1 10); do
+            if
+                ./vendor/bin/sail exec mariadb mysqlshow -u root -ppassword ktcms &>/dev/null
+            then
+                break
+            else
+                echo -n .
+                sleep 1
+            fi
+        done
+
+        ./vendor/bin/sail artisan migrate
+        ./vendor/bin/sail artisan storage:link
+        ./vendor/bin/sail npm install
+    )
+}
+
+function setup_sites() {
+    npm install
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+    --with-git-hooks)
+        declare -r SETUP_GIT_HOOKS=true
+        ;;
+    -h | --help)
+        usage
+        exit 0
+        ;;
+    *)
+        usage
+        echo "Error: $1 is invaid option" >&2
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+echo '
+Initializing...
+'
+
+setup_sites
+
+setup_ktcms
+
+if [ -n "${SETUP_GIT_HOOKS-}" ]; then
+    npx husky install
+fi
+
+echo '
+Complete!
+'

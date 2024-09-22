@@ -1,0 +1,449 @@
+scalar DateTime
+  @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+input BannerScopeInput {
+  placementId: ID! @eq(key: "placement_id")
+}
+
+input BookFilterInput {
+  keyword: String
+    @builder(method: "App\\GraphQL\\Builders\\BookBuilder@filteredByKeyword")
+    @rules(apply: ["max:255"])
+  formatIds: [ID!] @in(key: "format_id")
+  labelIds: [ID!] @in(key: "label_id")
+  genreIds: [ID!] @in(key: "genre_id")
+  seriesIds: [ID!] @in(key: "series_id")
+  released: Boolean = false @scope
+}
+
+input BookScopeInput {
+  siteId: ID! @scope(name: "publishedAtSite")
+  adult: AdultScopeType = EXCLUDE
+    @builder(method: "App\\GraphQL\\Builders\\BookBuilder@scopedByAdult")
+}
+
+input LabelFilterInput {
+  genreIds: [ID!] @in(key: "genre_id")
+  hasSite: Boolean @scope(name: "hasSite")
+}
+
+input NewsScopeInput {
+  siteId: ID! @scope(name: "publishedAtSite")
+}
+
+input NewsFilterInput {
+  year: String @where(key: "published_at", clause: "whereYear")
+  month: String @where(key: "published_at", clause: "whereMonth")
+}
+
+input NewsCategoryScopeInput {
+  siteId: ID! @where(key: "site_id")
+}
+
+input PageScopeInput {
+  siteId: ID! @scope(name: "publishedAtSite")
+}
+
+input RelatedItemScopeInput {
+  siteId: ID! @scope(name: "publishedAtSite")
+  adult: AdultScopeType = EXCLUDE
+    @builder(method: "App\\GraphQL\\Builders\\RelatedItemBuilder@scopedByAdult")
+}
+
+type Query @guard {
+  banners(scope: BannerScopeInput!): [Banner!]! @all(scopes: ["displayed"])
+
+  book(id: ID! @eq, scope: BookScopeInput!): Book @find(scopes: ["published"])
+
+  latestReleasedBook(
+    scope: BookScopeInput!,
+    filter: BookFilterInput
+  ): Book @orderBy(column: "release_date", direction: DESC) @first
+
+  books(
+    scope: BookScopeInput!
+    filter: BookFilterInput
+    orderBy: _ @orderBy(columns: ["release_date"])
+  ): [Book!]! @paginate(defaultCount: 10, scopes: ["published"])
+
+  upcomingBooks(
+    scope: BookScopeInput!
+  ): [Book!]! @all(scopes: ["published", "upcoming"]) @orderBy(column: "release_date")
+
+  bookFormats: [BookFormat!]! @all
+
+  labels(ids: [ID!] @whereKey, filter: LabelFilterInput): [Label!]! @all
+
+  news(slug: String! @eq, scope: NewsScopeInput!): News
+    @find(scopes: ["published"])
+
+  newsList(
+    scope: NewsScopeInput!
+    filter: NewsFilterInput
+    orderBy: _ @orderBy(columns: ["published_at"])
+  ): [News!]! @paginate(defaultCount: 10, scopes: ["published"])
+
+  newsCategories(scope: NewsCategoryScopeInput!): [NewsCategory!]! @all
+
+  newsArchive(scope: NewsScopeInput!): NewsDateStatistics
+    @field(resolver: "App\\GraphQL\\Queries\\ArchiveMonthQuery")
+
+  page(slug: String! @eq, scope: PageScopeInput!): Page @find
+
+  bookPreview(siteId: ID!, token: String!): BookPreview
+
+  newsPreview(token: String): NewsPreview
+
+  pagePreview(token: String): PagePreview
+}
+
+type Banner {
+  id: ID!
+  name: String!
+  url: String!
+  image: Media @with(relation: "media")
+  newTab: Boolean! @rename(attribute: "new_tab")
+}
+
+type Benefit {
+  id: ID!
+  name: String!
+  paid: Boolean!
+  thumbnail: Media @with(relation: "media")
+  store: Store! @with(relation: "goodsStore")
+}
+
+type Block {
+  id: ID!
+  type: BlockType!
+  customTitle: String @rename(attribute: "custom_title")
+  customContent: String @rename(attribute: "custom_content")
+}
+
+interface BookInterface {
+  id: ID!
+  publishedAt: DateTime!
+  adult: Boolean!
+  caption: String
+  cover: Media
+  description: String
+  ebookOnly: Boolean!
+  isbn13: String
+  limitedEdition: Boolean!
+  price: Int
+  specialEdition: Boolean!
+  title: String!
+  titleKana: String
+  volume: String
+  releaseDate: DateTime
+  trialUrl: String
+  surveyUrl: String
+  updatedAt: DateTime
+  benefits: [Benefit!]!
+  blocks: [Block!]!
+  characters: [Character!]!
+  creators: [Creator!]!
+  format: BookFormat
+  genre: Genre
+  label: Label
+  relatedItems(
+    scope: RelatedItemScopeInput!
+  ): [RelatedItem!]!
+  series: Series
+  size: BookSize
+  stories: [Story!]!
+  creation: BookCreation
+  bookPurchaseInfo: [BookPurchaseInfo!]!
+  primaryBookPurchaseInfo: BookPurchaseInfo
+  ebookPurchaseInfo: [EbookPurchaseInfo!]!
+  primaryEbookPurchaseInfo: EbookPurchaseInfo
+}
+
+type Book implements BookInterface {
+  id: ID!
+  publishedAt: DateTime! @rename(attribute: "published_at")
+  adult: Boolean!
+  caption: String
+  cover: Media @with(relation: "media")
+  description: String
+  ebookOnly: Boolean! @rename(attribute: "ebook_only")
+  isbn13: String
+  limitedEdition: Boolean! @rename(attribute: "limited_edition")
+  price: Int
+  specialEdition: Boolean! @rename(attribute: "special_edition")
+  title: String!
+  titleKana: String
+  volume: String
+  releaseDate: DateTime @rename(attribute: "release_date")
+  trialUrl: String @rename(attribute: "trial_url")
+  surveyUrl: String @rename(attribute: "survey_url")
+  updatedAt: DateTime @rename(attribute: "updated_at")
+  benefits: [Benefit!]! @belongsToMany
+  blocks: [Block!]! @hasMany(scopes: ["displayed"])
+  characters: [Character!]! @belongsToMany
+  creators: [Creator!]! @belongsToMany
+  format: BookFormat @belongsTo
+  genre: Genre @belongsTo
+  label: Label @belongsTo
+  relatedItems(
+    scope: RelatedItemScopeInput!
+  ): [RelatedItem!]! @morphMany(scopes: ["published"])
+  series: Series @belongsTo
+  size: BookSize @belongsTo
+  stories: [Story!]! @belongsToMany
+  creation: BookCreation
+  primaryBookPurchaseInfo: BookPurchaseInfo
+    @field(resolver: "BookPurchaseInfo@primary")
+    @with(relation: "bookstores.media")
+  bookPurchaseInfo: [BookPurchaseInfo!]!
+    @field(resolver: "BookPurchaseInfo@all")
+    @with(relation: "bookstores.media")
+  primaryEbookPurchaseInfo: EbookPurchaseInfo
+    @field(resolver: "EbookPurchaseInfo@primary")
+    @with(relation: "ebookstores.media")
+  ebookPurchaseInfo: [EbookPurchaseInfo!]!
+    @field(resolver: "EbookPurchaseInfo@all")
+    @with(relation: "ebookstores.media")
+}
+
+type BookPreview implements BookInterface {
+  id: ID!
+  publishedAt: DateTime! @rename(attribute: "published_at")
+  adult: Boolean!
+  caption: String
+  cover: Media @rename(attribute: "preview_cover")
+  description: String
+  ebookOnly: Boolean! @rename(attribute: "ebook_only")
+  isbn13: String
+  limitedEdition: Boolean! @rename(attribute: "limited_edition")
+  price: Int
+  specialEdition: Boolean! @rename(attribute: "special_edition")
+  title: String!
+  titleKana: String
+  volume: String
+  releaseDate: DateTime @rename(attribute: "release_date")
+  trialUrl: String @rename(attribute: "trial_url")
+  surveyUrl: String @rename(attribute: "survey_url")
+  updatedAt: DateTime @rename(attribute: "updated_at")
+  benefits: [Benefit!]!
+  blocks: [Block!]!
+  characters: [Character!]!
+  creators: [Creator!]!
+  format: BookFormat
+  genre: Genre
+  label: Label
+  relatedItems(
+    scope: RelatedItemScopeInput!
+  ): [RelatedItemPreview!]!
+  series: Series
+  size: BookSize
+  stories: [Story!]!
+  creation: BookCreation
+  primaryBookPurchaseInfo: BookPurchaseInfo
+    @field(resolver: "App\\GraphQL\\Types\\Book\\BookPurchaseInfo@primary")
+  bookPurchaseInfo: [BookPurchaseInfo!]!
+    @field(resolver: "App\\GraphQL\\Types\\Book\\BookPurchaseInfo@all")
+  primaryEbookPurchaseInfo: EbookPurchaseInfo
+    @field(resolver: "App\\GraphQL\\Types\\Book\\EbookPurchaseInfo@primary")
+  ebookPurchaseInfo: [EbookPurchaseInfo!]!
+    @field(resolver: "App\\GraphQL\\Types\\Book\\EbookPurchaseInfo@all")
+}
+
+type BookCreation {
+  creator: Creator! @belongsTo
+  originalType: String! @rename(attribute: "creation_type")
+  type: String!
+}
+
+type BookFormat {
+  id: ID!
+  name: String!
+}
+
+type BookPurchaseInfo {
+    store: Store!
+    banner: Media
+    isPrimary: Boolean!
+    purchaseUrl: String!
+}
+
+type BookSize {
+  id: ID!
+  name: String!
+}
+
+type Character {
+  id: ID!
+  description: String
+  name: String!
+  thumbnail: Media @with(relation: "media")
+}
+
+type Creator {
+  id: ID!
+  name: String!
+  nameKana: String @rename(attribute: "name_kana")
+  books(scope: BookScopeInput!): [Book!]! @belongsToMany(scopes: ["published"])
+  creation: BookCreation
+}
+
+type CreationType {
+  id: ID!
+  name: String!
+}
+
+type EbookPurchaseInfo {
+    store: Store!
+    banner: Media
+    isPrimary: Boolean!
+    purchaseUrl: String!
+}
+
+type ExternalLink {
+  id: ID!
+  title: String!
+  url: String!
+  thumbnail: Media @with(relation: "media")
+}
+
+type Genre {
+  id: ID!
+  name: String!
+  books(scope: BookScopeInput!): [Book!]! @hasMany(scopes: ["published"])
+}
+
+type Label {
+  id: ID!
+  name: String!
+  url: String
+  books(scope: BookScopeInput!): [Book!]! @hasMany(scopes: ["published"])
+  genre: Genre @belongsTo
+  types: [LabelType!]! @with(relation: "types") @method(name: "typesAsEnum")
+}
+
+type Media {
+  url: String! @rename(attribute: "original_url")
+  mimeType: String! @rename(attribute: "mime_type")
+  customProperties: MediaCustomProperties!
+    @rename(attribute: "custom_properties")
+}
+
+type MediaCustomProperties {
+  width: Int
+  height: Int
+}
+
+interface RelatedItemInterface {
+  id: ID!
+  description: String!
+  relatable: Relatable!
+}
+
+type RelatedItem implements RelatedItemInterface {
+  id: ID!
+  description: String!
+  relatable: Relatable! @morphTo
+}
+
+type RelatedItemPreview implements RelatedItemInterface {
+  id: ID!
+  description: String!
+  relatable: Relatable!
+}
+
+union Relatable = Book | ExternalLink
+
+type Series {
+  id: ID!
+  name: String!
+  books(scope: BookScopeInput!): [Book!]! @hasMany(scopes: ["published"])
+}
+
+type Store {
+  id: ID!
+  name: String!
+  url: String!
+}
+
+type Story {
+  id: ID!
+  title: String!
+  trialUrl: String @rename(attribute: "trial_url")
+  thumbnail: Media @with(relation: "media")
+  creators: [Creator!]! @belongsToMany
+}
+
+type NewsCategory {
+  id: ID!
+  name: String!
+  siteId: ID! @rename(attribute: "site_id")
+}
+
+interface NewsInterface {
+  id: ID!
+  publishedAt: DateTime!
+  title: String!
+  slug: String!
+  content: String!
+  category: NewsCategory!
+  eyecatch: Media
+  updatedAt: DateTime
+}
+
+type News implements NewsInterface {
+  id: ID!
+  publishedAt: DateTime! @rename(attribute: "published_at")
+  title: String!
+  slug: String!
+  content: String!
+  category: NewsCategory! @belongsTo
+  eyecatch: Media @with(relation: "media")
+  updatedAt: DateTime @rename(attribute: "updated_at")
+}
+
+type NewsPreview implements NewsInterface {
+  id: ID!
+  publishedAt: DateTime! @rename(attribute: "published_at")
+  title: String!
+  slug: String!
+  content: String!
+  category: NewsCategory!
+  eyecatch: Media @rename(attribute: "preview_eyecatch")
+  updatedAt: DateTime @rename(attribute: "updated_at")
+}
+
+type NewsDateStatistics {
+  data: [NewsDateStatisticsData!]!
+}
+
+type NewsDateStatisticsData {
+  year: String!
+  month: String!
+}
+
+interface PageInterface {
+  id: ID!
+  title: String!
+  slug: String!
+  content: String!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type Page implements PageInterface {
+  id: ID!
+  title: String!
+  slug: String!
+  content: String!
+  createdAt: DateTime @rename(attribute: "created_at")
+  updatedAt: DateTime @rename(attribute: "updated_at")
+}
+
+type PagePreview implements PageInterface {
+  id: ID!
+  title: String!
+  slug: String!
+  content: String!
+  createdAt: DateTime @rename(attribute: "created_at")
+  updatedAt: DateTime @rename(attribute: "updated_at")
+}

@@ -1,0 +1,10 @@
+services:
+  terraform:
+    image: hashicorp/terraform:1.4.2
+    env_file:
+      - .env
+    volumes:
+      - ./:/terraform
+    working_dir: /terraform
+    entrypoint: ash
+    tty: true

@@ -1,0 +1,569 @@
+enum BlockType {
+  Common
+  BookStore
+  EbookStore
+  Benefit
+  Series
+  Related
+  Story
+  Character
+  Custom
+}
+
+enum LabelType {
+  Paperback
+  Magazine
+  Goods
+  Unknown
+}
+
+enum AdultScopeType {
+  INCLUDE
+  EXCLUDE
+  ONLY
+}
+
+type Query {
+  banners(scope: BannerScopeInput!): [Banner!]!
+  book(id: ID!, scope: BookScopeInput!): Book
+  latestReleasedBook(scope: BookScopeInput!, filter: BookFilterInput): Book
+  upcomingBooks(scope: BookScopeInput!): [Book!]!
+  bookFormats: [BookFormat!]!
+  labels(ids: [ID!], filter: LabelFilterInput): [Label!]!
+  news(slug: String!, scope: NewsScopeInput!): News
+  newsCategories(scope: NewsCategoryScopeInput!): [NewsCategory!]!
+  newsArchive(scope: NewsScopeInput!): NewsDateStatistics
+  page(slug: String!, scope: PageScopeInput!): Page
+  bookPreview(siteId: ID!, token: String!): BookPreview
+  newsPreview(token: String): NewsPreview
+  pagePreview(token: String): PagePreview
+  books(
+    scope: BookScopeInput!
+    filter: BookFilterInput
+    orderBy: [QueryBooksOrderByOrderByClause!]
+
+    "Limits number of fetched items."
+    first: Int! = 10
+
+    "The offset from which items are returned."
+    page: Int
+  ): BookPaginator!
+  newsList(
+    scope: NewsScopeInput!
+    filter: NewsFilterInput
+    orderBy: [QueryNewsListOrderByOrderByClause!]
+
+    "Limits number of fetched items."
+    first: Int! = 10
+
+    "The offset from which items are returned."
+    page: Int
+  ): NewsPaginator!
+}
+
+scalar DateTime
+
+input BannerScopeInput {
+  placementId: ID!
+}
+
+input BookFilterInput {
+  keyword: String
+  formatIds: [ID!]
+  labelIds: [ID!]
+  genreIds: [ID!]
+  seriesIds: [ID!]
+  released: Boolean = false
+}
+
+input BookScopeInput {
+  siteId: ID!
+  adult: AdultScopeType = EXCLUDE
+}
+
+input LabelFilterInput {
+  genreIds: [ID!]
+  hasSite: Boolean
+}
+
+input NewsScopeInput {
+  siteId: ID!
+}
+
+input NewsFilterInput {
+  year: String
+  month: String
+}
+
+input NewsCategoryScopeInput {
+  siteId: ID!
+}
+
+input PageScopeInput {
+  siteId: ID!
+}
+
+input RelatedItemScopeInput {
+  siteId: ID!
+  adult: AdultScopeType = EXCLUDE
+}
+
+type Banner {
+  id: ID!
+  name: String!
+  url: String!
+  image: Media
+  newTab: Boolean!
+}
+
+type Benefit {
+  id: ID!
+  name: String!
+  paid: Boolean!
+  thumbnail: Media
+  store: Store!
+}
+
+type Block {
+  id: ID!
+  type: BlockType!
+  customTitle: String
+  customContent: String
+}
+
+interface BookInterface {
+  id: ID!
+  publishedAt: DateTime!
+  adult: Boolean!
+  caption: String
+  cover: Media
+  description: String
+  ebookOnly: Boolean!
+  isbn13: String
+  limitedEdition: Boolean!
+  price: Int
+  specialEdition: Boolean!
+  title: String!
+  titleKana: String
+  volume: String
+  releaseDate: DateTime
+  trialUrl: String
+  surveyUrl: String
+  updatedAt: DateTime
+  benefits: [Benefit!]!
+  blocks: [Block!]!
+  characters: [Character!]!
+  creators: [Creator!]!
+  format: BookFormat
+  genre: Genre
+  label: Label
+  relatedItems(scope: RelatedItemScopeInput!): [RelatedItem!]!
+  series: Series
+  size: BookSize
+  stories: [Story!]!
+  creation: BookCreation
+  bookPurchaseInfo: [BookPurchaseInfo!]!
+  primaryBookPurchaseInfo: BookPurchaseInfo
+  ebookPurchaseInfo: [EbookPurchaseInfo!]!
+  primaryEbookPurchaseInfo: EbookPurchaseInfo
+}
+
+type Book implements BookInterface {
+  id: ID!
+  publishedAt: DateTime!
+  adult: Boolean!
+  caption: String
+  cover: Media
+  description: String
+  ebookOnly: Boolean!
+  isbn13: String
+  limitedEdition: Boolean!
+  price: Int
+  specialEdition: Boolean!
+  title: String!
+  titleKana: String
+  volume: String
+  releaseDate: DateTime
+  trialUrl: String
+  surveyUrl: String
+  updatedAt: DateTime
+  benefits: [Benefit!]!
+  blocks: [Block!]!
+  characters: [Character!]!
+  creators: [Creator!]!
+  format: BookFormat
+  genre: Genre
+  label: Label
+  relatedItems(scope: RelatedItemScopeInput!): [RelatedItem!]!
+  series: Series
+  size: BookSize
+  stories: [Story!]!
+  creation: BookCreation
+  primaryBookPurchaseInfo: BookPurchaseInfo
+  bookPurchaseInfo: [BookPurchaseInfo!]!
+  primaryEbookPurchaseInfo: EbookPurchaseInfo
+  ebookPurchaseInfo: [EbookPurchaseInfo!]!
+}
+
+type BookPreview implements BookInterface {
+  id: ID!
+  publishedAt: DateTime!
+  adult: Boolean!
+  caption: String
+  cover: Media
+  description: String
+  ebookOnly: Boolean!
+  isbn13: String
+  limitedEdition: Boolean!
+  price: Int
+  specialEdition: Boolean!
+  title: String!
+  titleKana: String
+  volume: String
+  releaseDate: DateTime
+  trialUrl: String
+  surveyUrl: String
+  updatedAt: DateTime
+  benefits: [Benefit!]!
+  blocks: [Block!]!
+  characters: [Character!]!
+  creators: [Creator!]!
+  format: BookFormat
+  genre: Genre
+  label: Label
+  relatedItems(scope: RelatedItemScopeInput!): [RelatedItemPreview!]!
+  series: Series
+  size: BookSize
+  stories: [Story!]!
+  creation: BookCreation
+  primaryBookPurchaseInfo: BookPurchaseInfo
+  bookPurchaseInfo: [BookPurchaseInfo!]!
+  primaryEbookPurchaseInfo: EbookPurchaseInfo
+  ebookPurchaseInfo: [EbookPurchaseInfo!]!
+}
+
+type BookCreation {
+  creator: Creator!
+  originalType: String!
+  type: String!
+}
+
+type BookFormat {
+  id: ID!
+  name: String!
+}
+
+type BookPurchaseInfo {
+  store: Store!
+  banner: Media
+  isPrimary: Boolean!
+  purchaseUrl: String!
+}
+
+type BookSize {
+  id: ID!
+  name: String!
+}
+
+type Character {
+  id: ID!
+  description: String
+  name: String!
+  thumbnail: Media
+}
+
+type Creator {
+  id: ID!
+  name: String!
+  nameKana: String
+  books(scope: BookScopeInput!): [Book!]!
+  creation: BookCreation
+}
+
+type CreationType {
+  id: ID!
+  name: String!
+}
+
+type EbookPurchaseInfo {
+  store: Store!
+  banner: Media
+  isPrimary: Boolean!
+  purchaseUrl: String!
+}
+
+type ExternalLink {
+  id: ID!
+  title: String!
+  url: String!
+  thumbnail: Media
+}
+
+type Genre {
+  id: ID!
+  name: String!
+  books(scope: BookScopeInput!): [Book!]!
+}
+
+type Label {
+  id: ID!
+  name: String!
+  url: String
+  books(scope: BookScopeInput!): [Book!]!
+  genre: Genre
+  types: [LabelType!]!
+}
+
+type Media {
+  url: String!
+  mimeType: String!
+  customProperties: MediaCustomProperties!
+}
+
+type MediaCustomProperties {
+  width: Int
+  height: Int
+}
+
+interface RelatedItemInterface {
+  id: ID!
+  description: String!
+  relatable: Relatable!
+}
+
+type RelatedItem implements RelatedItemInterface {
+  id: ID!
+  description: String!
+  relatable: Relatable!
+}
+
+type RelatedItemPreview implements RelatedItemInterface {
+  id: ID!
+  description: String!
+  relatable: Relatable!
+}
+
+union Relatable = Book | ExternalLink
+
+type Series {
+  id: ID!
+  name: String!
+  books(scope: BookScopeInput!): [Book!]!
+}
+
+type Store {
+  id: ID!
+  name: String!
+  url: String!
+}
+
+type Story {
+  id: ID!
+  title: String!
+  trialUrl: String
+  thumbnail: Media
+  creators: [Creator!]!
+}
+
+type NewsCategory {
+  id: ID!
+  name: String!
+  siteId: ID!
+}
+
+interface NewsInterface {
+  id: ID!
+  publishedAt: DateTime!
+  title: String!
+  slug: String!
+  content: String!
+  category: NewsCategory!
+  eyecatch: Media
+  updatedAt: DateTime
+}
+
+type News implements NewsInterface {
+  id: ID!
+  publishedAt: DateTime!
+  title: String!
+  slug: String!
+  content: String!
+  category: NewsCategory!
+  eyecatch: Media
+  updatedAt: DateTime
+}
+
+type NewsPreview implements NewsInterface {
+  id: ID!
+  publishedAt: DateTime!
+  title: String!
+  slug: String!
+  content: String!
+  category: NewsCategory!
+  eyecatch: Media
+  updatedAt: DateTime
+}
+
+type NewsDateStatistics {
+  data: [NewsDateStatisticsData!]!
+}
+
+type NewsDateStatisticsData {
+  year: String!
+  month: String!
+}
+
+interface PageInterface {
+  id: ID!
+  title: String!
+  slug: String!
+  content: String!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type Page implements PageInterface {
+  id: ID!
+  title: String!
+  slug: String!
+  content: String!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type PagePreview implements PageInterface {
+  id: ID!
+  title: String!
+  slug: String!
+  content: String!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+"Information about pagination using a fully featured paginator."
+type PaginatorInfo {
+  "Number of items in the current page."
+  count: Int!
+
+  "Index of the current page."
+  currentPage: Int!
+
+  "Index of the first item in the current page."
+  firstItem: Int
+
+  "Are there more pages after this one?"
+  hasMorePages: Boolean!
+
+  "Index of the last item in the current page."
+  lastItem: Int
+
+  "Index of the last available page."
+  lastPage: Int!
+
+  "Number of items per page."
+  perPage: Int!
+
+  "Number of total available items."
+  total: Int!
+}
+
+"A paginated list of Book items."
+type BookPaginator {
+  "Pagination information about the list of items."
+  paginatorInfo: PaginatorInfo!
+
+  "A list of Book items."
+  data: [Book!]!
+}
+
+"A paginated list of News items."
+type NewsPaginator {
+  "Pagination information about the list of items."
+  paginatorInfo: PaginatorInfo!
+
+  "A list of News items."
+  data: [News!]!
+}
+
+"Allowed column names for Query.books.orderBy."
+enum QueryBooksOrderByColumn {
+  RELEASE_DATE
+}
+
+"Order by clause for Query.books.orderBy."
+input QueryBooksOrderByOrderByClause {
+  "The column that is used for ordering."
+  column: QueryBooksOrderByColumn!
+
+  "The direction that is used for ordering."
+  order: SortOrder!
+}
+
+"Allowed column names for Query.newsList.orderBy."
+enum QueryNewsListOrderByColumn {
+  PUBLISHED_AT
+}
+
+"Order by clause for Query.newsList.orderBy."
+input QueryNewsListOrderByOrderByClause {
+  "The column that is used for ordering."
+  column: QueryNewsListOrderByColumn!
+
+  "The direction that is used for ordering."
+  order: SortOrder!
+}
+
+"Directions for ordering a list of records."
+enum SortOrder {
+  "Sort records in ascending order."
+  ASC
+
+  "Sort records in descending order."
+  DESC
+}
+
+"Aggregate functions when ordering by a relation without specifying a column."
+enum OrderByRelationAggregateFunction {
+  "Amount of items."
+  COUNT
+}
+
+"Aggregate functions when ordering by a relation that may specify a column."
+enum OrderByRelationWithColumnAggregateFunction {
+  "Average."
+  AVG
+
+  "Minimum."
+  MIN
+
+  "Maximum."
+  MAX
+
+  "Sum."
+  SUM
+
+  "Amount of items."
+  COUNT
+}
+
+"Allows ordering a list of records."
+input OrderByClause {
+  "The column that is used for ordering."
+  column: String!
+
+  "The direction that is used for ordering."
+  order: SortOrder!
+}
+
+"Specify if you want to include or exclude trashed results from a query."
+enum Trashed {
+  "Only return trashed results."
+  ONLY
+
+  "Return both trashed and non-trashed results."
+  WITH
+
+  "Only return non-trashed results."
+  WITHOUT
+}
+

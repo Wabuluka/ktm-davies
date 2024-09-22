@@ -1,0 +1,66 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "lint": "eslint 'resources/**/*.{js,jsx,ts,tsx}' && tsc --noEmit",
+        "lint:fix": "eslint --fix 'resources/**/*.{js,jsx,ts,tsx}' && tsc --noEmit",
+        "format": "prettier --write --ignore-unknown 'resources/**/*.{js,jsx,ts,tsx}'"
+    },
+    "devDependencies": {
+        "@headlessui/react": "^1.4.2",
+        "@tailwindcss/forms": "^0.5.3",
+        "@types/lodash-es": "^4.17.7",
+        "@types/node": "^18.11.9",
+        "@types/prettier": "^2.7.3",
+        "@types/react": "^18.0.25",
+        "@types/react-beautiful-dnd": "^13.1.8",
+        "@types/react-dom": "^18.0.9",
+        "@typescript-eslint/eslint-plugin": "^5.44.0",
+        "@typescript-eslint/parser": "^5.44.0",
+        "@vitejs/plugin-react": "^4.0.0",
+        "autoprefixer": "^10.4.12",
+        "axios": "^1.1.2",
+        "eslint": "^8.28.0",
+        "eslint-config-prettier": "^8.5.0",
+        "eslint-plugin-react": "^7.31.11",
+        "eslint-plugin-react-hooks": "^4.6.0",
+        "laravel-vite-plugin": "^0.7.0",
+        "lodash": "^4.17.19",
+        "postcss": "^8.4.18",
+        "prettier": "3.0.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "tailwindcss": "^3.2.1",
+        "typescript": "^5.0.0",
+        "vite": "^4.3.8"
+    },
+    "dependencies": {
+        "@chakra-ui/icons": "^2.0.13",
+        "@chakra-ui/react": "^2.7.0",
+        "@emotion/react": "^11.10.5",
+        "@emotion/styled": "^11.10.5",
+        "@inertiajs/react": "^1.0.14",
+        "@lexical/react": "^0.11.0",
+        "@lexical/rich-text": "^0.11.0",
+        "@lexical/selection": "^0.11.0",
+        "@tanstack/react-query": "^5.56.2",
+        "@types/ziggy-js": "^1.3.2",
+        "chonky": "^2.3.2",
+        "chonky-icon-fontawesome": "^2.3.2",
+        "date-fns-tz": "^2.0.0",
+        "framer-motion": "^6.5.1",
+        "lexical": "^0.11.0",
+        "lodash-es": "^4.17.21",
+        "react-beautiful-dnd": "^13.1.1",
+        "react-icons": "^4.7.1",
+        "react-query": "^3.39.3"
+    },
+    "lint-staged": {
+        "**/*.php": "./vendor/bin/pint",
+        "resources/js/**/*.{js,ts,jsx,tsx}": [
+            "eslint",
+            "prettier --write"
+        ]
+    }
+}
