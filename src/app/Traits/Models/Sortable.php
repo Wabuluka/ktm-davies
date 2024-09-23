@@ -71,62 +71,15 @@ trait Sortable
         }
     }
 
-     /**
-     * Sorts an array of data and saves it to the specified table.
-     *
-     * @param array $data Array of data to be sorted.
-     * @param string $table Table name where the data will be saved.
-     * @param string $column Column name where the sorted data will be saved.
-     * @param string $sortDirection Sort direction (asc or desc). Default is 'asc'.
-     * @return bool True if the data is successfully saved, otherwise false.
-     * @throws Exception If there is an error during sorting or saving.
-     */
-    public function sortObj(array $data, string $table, string $column, string $sortDirection = 'asc')
-    {
-        try {
-            // Validate sort direction
-            if (!in_array(strtolower($sortDirection), ['asc', 'desc'])) {
-                throw new Exception('Invalid sort direction. Use "asc" or "desc".');
-            }
-
-            // Sort the data
-            if ($sortDirection === 'asc') {
-                sort($data);
-            } else {
-                rsort($data);
-            }
-
-            // Prepare data for insertion
-            $insertData = [];
-            foreach ($data as $value) {
-                $insertData[] = [
-                    $column => $value,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            // Insert sorted data into the specified table
-            DB::table($table)->insert($insertData);
-
-            return true;
-        } catch (Exception $e) {
-            // Handle exception (log the error, return false, etc.)
-            report($e);
-            return false;
-        }
-    }
-
-
     public function updateSortingOrder(Request $request)
     {
         try{
-            $data = $request->validate([
-                'order' => 'required|array',
-                'order.*' => 'integer',
-            ]);
-            foreach ($data['order'] as $position => $id) {
-                self::where('id', $id)->update(['sort' => $position + 1]);
+            // $data = $request->validate([
+            //     'sort' => 'required|array',
+            //     'sort.*' => 'array',
+            // ]);
+            foreach($request as $st) {
+                self::where('id', $st['id'])->update(['sort' => $st['sort']]);
             }
             return response()->json(['status' => 'success']);
         } catch (Exception $e){

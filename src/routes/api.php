@@ -42,13 +42,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('label/{label}/sort/move-up', [LabelController::class, 'moveUp'])->name('label.move_up');
     Route::patch('label/{label}/sort/move-down', [LabelController::class, 'moveDown'])->name('label.move_down');
     // refcatory
-    Route::post('label/sort', [LabelController::class, 'sort'])->name('label.sort');
+    Route::patch('label/sort', [LabelController::class, 'sort'])->name('label.sort');
 
     Route::apiResource('genre', GenreController::class);
     Route::patch('genre/{genre}/sort/move-up', [GenreController::class, 'moveUp'])->name('genre.move_up');
     Route::patch('genre/{genre}/sort/move-down', [GenreController::class, 'moveDown'])->name('genre.move_down');
 
     Route::post('genre/sort', [GenreController::class, 'sort'])->name('genre.sort');
+
+
 
     Route::apiResource('stories', StoryController::class);
     Route::apiResource('characters', CharacterController::class);

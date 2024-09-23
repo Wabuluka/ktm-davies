@@ -6,15 +6,7 @@ export type Label = {
   url: string;
   genre_id: number;
   sort: number;
-  types: LabelType[];
+  types: LabelType[] | [];
 };
 
-export interface Item {
-  id: number;
-  name: string;
-  sort_order: number;
-}
 
-export interface SortMutationData {
-  order: number[];
-}

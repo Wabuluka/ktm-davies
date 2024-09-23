@@ -75,15 +75,9 @@ class LabelController extends Controller
         $label->moveDown();
     }
 
-    public function sort(Request $request)
+    public function sort(Label $label, Request $request)
     {
-        $data = $request->validate([
-            'order' => 'required|array',
-            'order.*' => 'integer',
-        ]);
-        foreach ($data['order'] as $position => $id) {
-            Label::where('id', $id)->update(['sort' => $position + 1]);
-        }
-        return response()->json(['status' => 'success']);
+        // dd($request->all());
+        $label->updateSortingOrder($request);
     }
 }

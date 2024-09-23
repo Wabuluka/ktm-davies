@@ -27,8 +27,8 @@ import { QueryParams, useIndexLabelQuery } from '../Hooks/useIndexLabelQuery';
 import { CreateLabelDrawer } from './CreateLabelDrawer';
 import { EditLabelDrawer } from './EditLabelDrawer';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
-import { SortLabelButtons } from '@/Features/Label/Components/SortLabelButtons';
-import { useSortLabelMutationDND } from '@/Features/Label/Hooks/useSortLabelMutationDND';
+import { SortLabelData, useSortLabelMutationDND } from '@/Features/Label/Hooks/useSortLabelMutationDND';
+import { Label } from '@/Features/Label/Types';
 
 type Props = {
   onSubmit: (labelId?: number) => void;
@@ -52,6 +52,7 @@ export const SelectLabelDrawer: FC<Props> = ({
     isLoading,
     queryKey,
   } = useIndexLabelQuery(queryParams);
+  const sortLabelMutation = useSortLabelMutationDND();
 
   const handleClose = () => {
     setName('');
@@ -78,6 +79,10 @@ export const SelectLabelDrawer: FC<Props> = ({
 
   const handleSearchSubmit = () => {
     setQueryParams({ name: name });
+  };
+
+  const handleSort = (data: Label) => {
+    sortLabelMutation.mutate(data);
   };
 
   return (
@@ -109,24 +114,33 @@ export const SelectLabelDrawer: FC<Props> = ({
               >
                 <Table>
                   <DragDropContext
-
-
-                      // Inside the DragDropContext onDragEnd event handler
                       onDragEnd={(result) => {
                         if (!result.destination) return;
                         if (result.destination.index === result.source.index) return;
                         const newLabels = [...labelList];
+                        console.log('_______hdhgfhgd',newLabels)
+                        const payload = newLabels.map((label, i) =>  ({
+                          id: label.id,
+                          order: label.sort = i + 1,
+                          name: label.name,
+                          url: '',
+                          genre_id: label.genre_id,
+                          types:  [
+                            {
+                              id: label.id,
+                              sort: label.sort,
+                              name: label.name,
+                              is_digital: false
+                            }
+
+                          ]
+
+                        }));
                         newLabels.splice(result.source.index, 1);
-                        newLabels.splice(
-                          result.destination.index,
-                          0,
-                          labelList[result.source.index],
-                        );
-
-                        // Call the mutate function of the useSortLabelMutationDND hook
-                        useSortLabelMutationDND.mutate({newLabels});
+                        newLabels.splice( result.destination.index, 0, labelList[result.source.index], );
+                        console.log('mapped',payload)
+                        handleSort(payload);
                       }}
-
                     >
                     <Droppable droppableId='labels-1'>
                       {(provided) => (
@@ -135,18 +149,19 @@ export const SelectLabelDrawer: FC<Props> = ({
                             <Draggable key={label.id} index={i} draggableId={label.id.toString()}>
                               {(provided) => (
                                 <Tr
-                                key={label.id}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                ref={provided.innerRef}
-                                style={{
-                                  ...provided.draggableProps.style,
-                                  padding: "10px",
-                                  margin: "5px 0",
-                                  // backgroundColor: "#f0f0f0",
-                                  border: "1px solid #ddd",
-                                  borderRadius: "4px"
-                              }}
+                                  key={label.id}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  ref={provided.innerRef}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    padding: "10px",
+                                    margin: "5px 0",
+                                    // backgroundColor: "#f0f0f0",
+                                    border: "1px solid #ddd",
+                                    borderRadius: "4px"
+                                  }}
+
                                 >
                                   <Td w={1} p={0}>
                                     <Radio
@@ -162,11 +177,11 @@ export const SelectLabelDrawer: FC<Props> = ({
                                   <Td>{label.name}</Td>
                                   {!queryParams?.name && (
                                     <Td w={1}>
-                                      <SortLabelButtons
+                                      {/* <SortLabelButtons
                                         labelId={label.id}
                                         first={i === 0}
                                         last={i === labelList.length - 1}
-                                      />
+                                      /> */}
                                     </Td>
                                   )}
                                   <Td w={1}>
@@ -189,9 +204,6 @@ export const SelectLabelDrawer: FC<Props> = ({
                         </Tbody>
                       )}
                     </Droppable>
-
-
-
                   </DragDropContext>
                 </Table>
               </RadioGroup>
