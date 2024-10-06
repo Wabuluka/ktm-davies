@@ -5,18 +5,18 @@ import { useToast } from '@chakra-ui/react';
 import { Label } from '@/Features/Label/Types';
 
 interface SortLabelResponse {
-  // create  response structure here if known
   success: boolean;
   message: string;
 }
-export const useSortLabelMutationDND = (): UseMutationResult<SortLabelResponse, Error, Label> => {
+
+export const useSortLabelMutationDND = (): UseMutationResult<SortLabelResponse, Error, Label[]> => {
   const toast = useToast();
 
   const useMoveMutation = () =>
-    useMutation<SortLabelResponse, Error, Label>({
-      mutationFn: (data:Label) =>
+    useMutation<SortLabelResponse, Error, Label[]>({
+      mutationFn: (data: Label[]) =>
         axios
-          .post<SortLabelResponse>(route(`label.sort`, {data}))
+          .patch<SortLabelResponse>(route(`label.sort`), { data })
           .then((result: AxiosResponse<SortLabelResponse>) => {
             console.log(result);
             return result.data;
@@ -28,7 +28,6 @@ export const useSortLabelMutationDND = (): UseMutationResult<SortLabelResponse, 
         } as UseToastOptions);
       },
       onError: () => {
-        // console.log(Error);
         toast({ title: 'Failed to save the sorting order', status: 'error' } as UseToastOptions);
       },
     });
