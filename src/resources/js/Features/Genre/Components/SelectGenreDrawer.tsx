@@ -1,4 +1,3 @@
-import { SortGenreButtons } from '@/Features/Genre/Components/SortGenreButtons';
 import { DataFetchError } from '@/UI/Components/Feedback/DataFetchError';
 import { LoadingSpinner } from '@/UI/Components/Feedback/LoadingSpinner';
 import { EditButton } from '@/UI/Components/Form/Button/EditButton';
@@ -9,8 +8,10 @@ import {
   Box,
   Button,
   ButtonGroup,
+  Center,
   FormControl,
   FormLabel,
+  IconButton,
   Input,
   Radio,
   RadioGroup,
@@ -22,10 +23,15 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { QueryParams, useIndexGenreQuery } from '../Hooks/useIndexGenreQuery';
 import { CreateGenreDrawer } from './CreateGenreDrawer';
 import { EditGenreDrawer } from './EditGenreDrawer';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import { Genre } from '@/Features/Genre/Types';
+import { useSortGenreMutationDND } from '@/Features/Genre/Hooks/useSortGenreMutationDND';
+import { DragHandleIcon } from '@chakra-ui/icons';
+import { queryClient } from '@/Lib/react-query';
 
 type Props = {
   onSubmit: (GenreId?: number) => void;
@@ -50,6 +56,10 @@ export const SelectGenreDrawer: FC<Props> = ({
     queryKey,
   } = useIndexGenreQuery(queryParams);
 
+  const sortBlockMutation = useSortGenreMutationDND();
+  useEffect(() => {
+    queryClient.invalidateQueries(queryKey);
+  }, [sortBlockMutation.isSuccess, queryKey]);
   const handleClose = () => {
     setName('');
     setQueryParams(undefined);
@@ -77,6 +87,10 @@ export const SelectGenreDrawer: FC<Props> = ({
     setQueryParams({ name: name });
   };
 
+  const handleSort = (data: Genre) => {
+    console.log('am here', data);
+    sortBlockMutation.mutate(data);
+  };
   return (
     <>
       {renderOpenDrawerElement(onOpen)}
@@ -105,46 +119,102 @@ export const SelectGenreDrawer: FC<Props> = ({
                 value={selectedGenreIdInDrawer?.toString()}
               >
                 <Table>
-
-                  <Tbody>
-                    {genreList.map((genre, i) => (
-                      <Tr key={genre.id}>
-                        <Td w={1} p={0}>
-                          <Radio
-                            p={4}
-                            name="genre"
-                            value={genre.id.toString()}
-                            onChange={() =>
-                              setSelectedGenreIdInDrawer(genre.id)
-                            }
-                            checked={genre.id === selectedGenreIdInDrawer}
-                          />
-                        </Td>
-                        <Td>{genre.name}</Td>
-                        {!queryParams?.name && (
-                          <Td w={1}>
-                            <SortGenreButtons
-                              genreId={genre.id}
-                              first={i === 0}
-                              last={i === genreList.length - 1}
-                            />
-                          </Td>
-                        )}
-                        <Td w={1}>
-                          <EditGenreDrawer
-                            genreId={genre.id}
-                            onGenreDeleted={handleGenreDeleted}
-                            renderOpenDrawerElement={(onOpen) => (
-                              <EditButton
-                                aria-label={'Edit Genre'}
-                                onClick={onOpen}
-                              />
-                            )}
-                          />
-                        </Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
+                  <DragDropContext
+                    onDragEnd={(result) => {
+                      if (!result.destination) return;
+                      if (result.destination.index === result.source.index)
+                        return;
+                      const newBlocks = [...genreList];
+                      const [reorderedItem] = newBlocks.splice(
+                        result.source.index,
+                        1,
+                      );
+                      newBlocks.splice(
+                        result.destination.index,
+                        0,
+                        reorderedItem,
+                      );
+                      const payload = newBlocks.map((genre, index) => ({
+                        id: genre.id,
+                        order: index + 1,
+                        name: genre.name,
+                        sort: genre.sort,
+                      }));
+                      handleSort(payload);
+                      console.log('sorted', payload);
+                    }}
+                  >
+                    <Droppable droppableId="genre-selection">
+                      {(provided) => (
+                        <Tbody
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                        >
+                          {genreList.map((genre, i) => (
+                            <Draggable
+                              key={genre.id}
+                              index={i}
+                              draggableId={genre.id.toString()}
+                            >
+                              {(provided) => (
+                                <Tr
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  ref={provided.innerRef}
+                                >
+                                  <Td w={1} p={0}>
+                                    <Center>
+                                      <Radio
+                                        p={4}
+                                        name="genre"
+                                        value={genre.id.toString()}
+                                        onChange={() =>
+                                          setSelectedGenreIdInDrawer(genre.id)
+                                        }
+                                        checked={
+                                          genre.id === selectedGenreIdInDrawer
+                                        }
+                                      />
+                                      <IconButton
+                                        as={DragHandleIcon}
+                                        aria-label={``}
+                                        bg="gray.500"
+                                        color="white"
+                                        p={2}
+                                      />
+                                    </Center>
+                                  </Td>
+                                  <Td>{genre.name}</Td>
+                                  {!queryParams?.name && (
+                                    <Td w={1}>
+                                      {/* <SortGenreButtons
+                                        genreId={genre.id}
+                                        first={i === 0}
+                                        last={i === genreList.length - 1}
+                                      /> */}
+                                    </Td>
+                                  )}
+                                  <Td w={1}>
+                                    <EditGenreDrawer
+                                      genreId={genre.id}
+                                      onGenreDeleted={handleGenreDeleted}
+                                      renderOpenDrawerElement={(onOpen) => (
+                                        <EditButton
+                                          aria-label={'Edit Genre'}
+                                          onClick={onOpen}
+                                        />
+                                      )}
+                                    />
+                                  </Td>
+                                </Tr>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </Tbody>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
                 </Table>
               </RadioGroup>
             </form>

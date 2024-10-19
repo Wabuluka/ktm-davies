@@ -3,15 +3,14 @@ import axios from 'axios';
 import { Genre } from '../Types';
 import { useToast } from '@chakra-ui/react';
 
-export const useSortGenreMutation = () => {
+export const useSortGenreMutationDND = () => {
   const toast = useToast();
 
-  const useMoveMutation = (direction: 'up' | 'down') =>
+  const useMoveMutation = () =>
     // console.log(direction)
     useMutation({
-      mutationFn: (id: Genre['id']) =>
-        axios.patch(route(`genre.move_${direction}`, id)).then((result) => {
-          console.log(result);
+      mutationFn: (data: Genre) =>
+        axios.post(route(`genre.sort`, { data })).then((result) => {
           result.data;
         }),
       onSuccess: () => {
@@ -25,8 +24,5 @@ export const useSortGenreMutation = () => {
       },
     });
 
-  return {
-    moveUpMutation: useMoveMutation('up'),
-    moveDownMutation: useMoveMutation('down'),
-  };
+  return useMoveMutation();
 };

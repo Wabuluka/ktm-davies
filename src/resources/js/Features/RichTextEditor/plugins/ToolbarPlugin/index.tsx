@@ -78,6 +78,7 @@ import { EmbedConfigs } from '../AutoEmbedPlugin';
 import { INSERT_COLLAPSIBLE_COMMAND } from '../CollapsiblePlugin';
 import { InsertImageDialog } from '../ImagesPlugin';
 import { InsertTableDialog } from '../TablePlugin';
+// import { InsertImageDialogModification } from '@/Features/RichTextEditor/plugins/ImagesPluginModification';
 
 const blockTypeToBlockName = {
   bullet: 'Bulleted List',
@@ -836,6 +837,7 @@ export default function ToolbarPlugin(): JSX.Element {
               <i className="icon image" />
               <span className="text">Image</span>
             </DropDownItem>
+
             <DropDownItem
               onClick={() => {
                 showModal('Insert Table', (onClose) => (

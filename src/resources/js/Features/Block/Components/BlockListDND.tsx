@@ -7,7 +7,7 @@ import {
   Tr,
   useDisclosure,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBlockTypes } from '../Hooks/useBlockTypes';
 import { BlockOnBookForm } from '../Types';
 import { EditCustomBlockDrawer } from './EditCustomBlockDrawer';
@@ -43,9 +43,26 @@ export function BlockListDND({
     isCharacterBlock,
     isCustomBlock,
   } = useBlockTypes();
+
   const { isOpen, onClose, onOpen } = useDisclosure();
+  const [isDragging, setIsDragging] = useState(false);
   const [editingCustomBlock, setEditingCustomBlock] =
     useState<BlockOnBookForm>();
+
+  const [blockList, setBlockList] = useState<BlockOnBookForm[]>([]);
+
+  useEffect(() => {
+    const savedBlocks = localStorage.getItem('blockList');
+    if (savedBlocks) {
+      setBlockList(JSON.parse(savedBlocks));
+    } else {
+      setBlockList(blocks);
+    }
+  }, [blocks]);
+
+  const saveBlockList = (updatedBlocks: BlockOnBookForm[]) => {
+    localStorage.setItem('blockList', JSON.stringify(updatedBlocks));
+  };
 
   function createOnEditHandler(block: BlockOnBookForm) {
     return (formData: BlockOnBookForm) => {
@@ -65,10 +82,25 @@ export function BlockListDND({
         setEditingCustomBlock(formData);
         onOpen();
       } else {
-        throw new Error('ブロックの種別が不正です');
+        throw new Error('Invalid block type');
       }
     };
   }
+
+  const handleOnDragEnd = (result:any) => {
+    const { destination, source } = result;
+    if (!destination || destination.index === source.index) return;
+
+    const reorderedBlocks = Array.from(blockList);
+    const [movedBlock] = reorderedBlocks.splice(source.index, 1);
+    reorderedBlocks.splice(destination.index, 0, movedBlock);
+    setBlockList(reorderedBlocks);
+    saveBlockList(reorderedBlocks);
+  };
+
+  const handleOnBeforeDragStart = () => {
+    setIsDragging(true);
+  };
 
   return (
     <>
@@ -83,41 +115,38 @@ export function BlockListDND({
           </Tr>
         </Thead>
         <DragDropContext
-          onDragEnd={(result) => {
-            if (!result.destination) return;
-            if (result.destination.index === result.source.index) return;
-            blocks.forEach(sortedBlock => {
-              console.log('_____',sortedBlock.sort)
-            });
-            const newBlocks = [...blocks];
-            newBlocks.splice(result.source.index, 1);
-            newBlocks.splice(result.destination.index, 0, blocks[result.source.index], );
-            console.log(newBlocks.sort);
-            blocks = newBlocks;
-          }}
+
+          onDragEnd={handleOnDragEnd}
+          onBeforeDragStart={handleOnBeforeDragStart}
         >
-          <Droppable droppableId="blocks">
+          <Droppable droppableId="blocks"
+          >
             {(provided) => (
               <Tbody ref={provided.innerRef} {...provided.droppableProps}>
-                {blocks.map((block, i) => (
+                {blockList.map((block, i) => (
                   <Draggable
-                    key={block.sort}
+                    key={block.id}
                     index={i}
                     draggableId={block.id.toString()}
                   >
-                    {(provided) => (
-                      <tr
+                    {(provided,) => (
+                      <Tr
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         ref={provided.innerRef}
-                        // style={{ ...provided.draggableProps.style,  backgroundColor: '#f8f8f8' }}
+                        style={{
+                          ...provided.draggableProps.style,
+                          display: 'table-row',
+
+                        }}
                       >
                         <BlockListItemDND
-                          key={block.sort}
+                          key={block.id}
                           block={block}
+                          isDragging={isDragging}
                           onEdit={createOnEditHandler(block)}
                         />
-                      </tr>
+                      </Tr>
                     )}
                   </Draggable>
                 ))}

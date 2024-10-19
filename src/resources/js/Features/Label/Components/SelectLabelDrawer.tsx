@@ -8,8 +8,10 @@ import {
   Box,
   Button,
   ButtonGroup,
+  Center,
   FormControl,
   FormLabel,
+  IconButton,
   Input,
   Radio,
   RadioGroup,
@@ -21,13 +23,15 @@ import {
   useDisclosure,
   VStack,
 } from '@chakra-ui/react';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { QueryParams, useIndexLabelQuery } from '../Hooks/useIndexLabelQuery';
 import { CreateLabelDrawer } from './CreateLabelDrawer';
 import { EditLabelDrawer } from './EditLabelDrawer';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { useSortLabelMutationDND } from '@/Features/Label/Hooks/useSortLabelMutationDND';
 import { Label } from '@/Features/Label/Types';
+import { queryClient } from '@/Lib/react-query';
+import { DragHandleIcon } from '@chakra-ui/icons';
 
 type Props = {
   onSubmit: (labelId?: number) => void;
@@ -52,6 +56,10 @@ export const SelectLabelDrawer: FC<Props> = ({
     queryKey,
   } = useIndexLabelQuery(queryParams);
   const sortLabelMutation = useSortLabelMutationDND();
+
+  useEffect(() => {
+    queryClient.invalidateQueries(queryKey);
+  }, [sortLabelMutation.isSuccess, queryKey]);
 
   const handleClose = () => {
     setName('');
@@ -84,6 +92,8 @@ export const SelectLabelDrawer: FC<Props> = ({
     sortLabelMutation.mutate(data);
   };
 
+  sortLabelMutation.isSuccess;
+
   return (
     <>
       {renderOpenDrawerElement(onOpen)}
@@ -113,35 +123,51 @@ export const SelectLabelDrawer: FC<Props> = ({
               >
                 <Table>
                   <DragDropContext
-                      onDragEnd={(result) => {
-                        if (!result.destination) return;
-                        if (result.destination.index === result.source.index) return;
-                        const newLabels = Array.from(labelList);
-                        const [reorderedItem] = newLabels.splice(result.source.index, 1);
-                        newLabels.splice(result.destination.index, 0, reorderedItem);
-                        const payload = newLabels.map((label, index) => ({
-                          id: label.id,
-                          order: index + 1,
-                          name: label.name,
-                          url: '',
-                          genre_id: label.genre_id,
-                          types: [
-                            {
-                              id: label.id,
-                              sort: index + 1,
-                              name: label.name,
-                              is_digital: false
-                            }
-                          ]
-                        }));
-                        handleSort(payload);
-                      }}
-                    >
-                    <Droppable droppableId='labels-1'>
+                    onDragEnd={(result) => {
+                      if (!result.destination) return;
+                      if (result.destination.index === result.source.index)
+                        return;
+                      const newLabels = Array.from(labelList);
+                      const [reorderedItem] = newLabels.splice(
+                        result.source.index,
+                        1,
+                      );
+                      newLabels.splice(
+                        result.destination.index,
+                        0,
+                        reorderedItem,
+                      );
+                      const payload = newLabels.map((label, index) => ({
+                        id: label.id,
+                        order: index + 1,
+                        name: label.name,
+                        url: '',
+                        genre_id: label.genre_id,
+                        sort: label.sort,
+                        type: [
+                          {
+                            id: label.id,
+                            sort: index + 1,
+                            name: label.name,
+                            is_digital: false,
+                          },
+                        ],
+                      }));
+                      handleSort(payload);
+                    }}
+                  >
+                    <Droppable droppableId="labels-1">
                       {(provided) => (
-                        <Tbody ref={provided.innerRef} {...provided.droppableProps}>
+                        <Tbody
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                        >
                           {labelList.map((label, index) => (
-                            <Draggable key={label.id} index={index} draggableId={label.id.toString()}>
+                            <Draggable
+                              key={label.id}
+                              index={index}
+                              draggableId={label.id.toString()}
+                            >
                               {(provided) => (
                                 <Tr
                                   key={label.id}
@@ -150,22 +176,33 @@ export const SelectLabelDrawer: FC<Props> = ({
                                   {...provided.dragHandleProps}
                                   style={{
                                     ...provided.draggableProps.style,
-                                    padding: "10px",
-                                    margin: "5px 0",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px"
+                                    padding: '10px',
+                                    margin: '5px 0',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '4px',
                                   }}
                                 >
                                   <Td w={1} p={0}>
-                                    <Radio
-                                      p={4}
-                                      name="label"
-                                      value={label.id.toString()}
-                                      onChange={() =>
-                                        setSelectedLabelIdInDrawer(label.id)
-                                      }
-                                      isChecked={label.id === selectedLabelIdInDrawer}
-                                    />
+                                    <Center>
+                                      <Radio
+                                        p={4}
+                                        name="label"
+                                        value={label.id.toString()}
+                                        onChange={() =>
+                                          setSelectedLabelIdInDrawer(label.id)
+                                        }
+                                        isChecked={
+                                          label.id === selectedLabelIdInDrawer
+                                        }
+                                      />
+                                      <IconButton
+                                        as={DragHandleIcon}
+                                        aria-label={`を削除する`}
+                                        bg="gray.500"
+                                        color="white"
+                                        p={2}
+                                      />
+                                    </Center>
                                   </Td>
                                   <Td>{label.name}</Td>
                                   {!queryParams?.name && (

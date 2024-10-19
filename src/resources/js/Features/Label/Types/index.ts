@@ -8,5 +8,3 @@ export type Label = {
   sort: number;
   types: LabelType[] | [];
 };
-
-

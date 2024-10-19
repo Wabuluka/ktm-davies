@@ -2,26 +2,27 @@ import { useMutation, UseMutationResult } from 'react-query';
 import axios, { AxiosResponse } from 'axios';
 import { UseToastOptions } from '@chakra-ui/react';
 import { useToast } from '@chakra-ui/react';
-import { Label } from '@/Features/Label/Types';
+import { BlockOnBookForm } from '@/Features/Block/Types';
 
 interface SortLabelResponse {
+  // create  response structure here if known
   success: boolean;
   message: string;
 }
-
-export const useSortLabelMutationDND = (): UseMutationResult<
+export const useSortBlockMutationDND = (): UseMutationResult<
   SortLabelResponse,
   Error,
-  Label[]
+  BlockOnBookForm
 > => {
   const toast = useToast();
 
   const useMoveMutation = () =>
-    useMutation<SortLabelResponse, Error, Label[]>({
-      mutationFn: (data: Label[]) =>
+    useMutation<SortLabelResponse, Error, BlockOnBookForm>({
+      mutationFn: (data: BlockOnBookForm) =>
         axios
-          .post<SortLabelResponse>(route(`label.sort`), { data })
+          .post<SortLabelResponse>(route(`block.sort`, { data }))
           .then((result: AxiosResponse<SortLabelResponse>) => {
+            console.log(result);
             return result.data;
           }),
       onSuccess: () => {
@@ -31,8 +32,9 @@ export const useSortLabelMutationDND = (): UseMutationResult<
         } as UseToastOptions);
       },
       onError: () => {
+        // console.log(Error);
         toast({
-          title: 'Failed to save the sorting order',
+          title: 'Failed to save the sorting order for blocks',
           status: 'error',
         } as UseToastOptions);
       },

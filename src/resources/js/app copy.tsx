@@ -9,8 +9,6 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 import { queryClient } from './Lib/react-query';
 import { theme } from './theme';
 import { toastOptions } from './toastOptions';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const appName =
   window.document.getElementsByTagName('title')[0]?.innerText || 'KTCMS';
@@ -30,13 +28,8 @@ createInertiaApp({
     root.render(
       <ChakraProvider theme={theme} {...toastOptions}>
         <QueryClientProvider client={queryClient}>
-          <DndProvider backend={HTML5Backend}>
-            <ReactQueryDevtools
-              initialIsOpen={false}
-              position={'bottom-right'}
-            />
-            <App {...props} />
-          </DndProvider>
+          <ReactQueryDevtools initialIsOpen={false} position={'bottom-right'} />
+          <App {...props} />
         </QueryClientProvider>
       </ChakraProvider>,
     );
